@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL") 
+}
+
+// Menentukan pilihan Role yang tersedia
+enum Role {
+  ADMIN
+  KEPALA_SEKOLAH
+  GURU
+}
+
+// 1. Tabel Pengguna (User)
+model User {
+  id        String   @id @default(uuid())
+  nama      String
+  email     String   @unique
+  password  String
+  role      Role     @default(GURU)
+  
+  // Relasi: Satu user bisa punya banyak deck
+  decks     Deck[]   
+  
+  createdAt DateTime @default(now())
+}
+
+// 2. Tabel Koleksi (Deck)
+model Deck {
+  id        String      @id @default(cuid())
+  judul     String
+  deskripsi String?     // Ini tambahan kita
+  
+  // Relasi: Deck ini milik siapa?
+  guruId    String
+  guru      User        @relation(fields: [guruId], references: [id], onDelete: Cascade)
+  
+  // Relasi ke Flashcard
+  flashcards Flashcard[]
+  
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+// 3. Tabel Kartu (Flashcard)
+model Flashcard {
+  id         String   @id @default(cuid())
+  pertanyaan String   // Sebelumnya mungkin 'term'
+  jawaban    String   // Sebelumnya mungkin 'definition'
+  
+  // Relasi: Kartu ini milik Deck yang mana?
+  deckId     String
+  deck       Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
